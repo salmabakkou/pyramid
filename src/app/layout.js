@@ -3,10 +3,10 @@ import Sidebar from "@/components/Sidebar";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="flex bg-slate-50">
+    <html lang="fr">
+      <body className="bg-slate-50 min-h-screen">
         <Sidebar />
-        <main className="flex-1 ml-64 p-8">
+        <main className="transition-all duration-300 p-4 md:p-8 ml-0 md:ml-64">
         {children}
         </main>
       </body>
