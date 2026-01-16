@@ -28,3 +28,9 @@ export const addProduct = async(formData)=>{
     const res = await api.post('/products',product);
     return res.data;
 };
+
+export const getProducts = async() =>{
+    const response = await api.get('/products')
+    return response.data;
+};
+
