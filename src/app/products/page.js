@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { getProductsThunk } from '@/store/productsSlice';
 import Link from 'next/link';
 import { ProductCard } from '@/components/ProductCard';
-import { Plus, Search, SlidersHorizontal, Package } from 'lucide-react';
+import { getProductsThunk, deleteProductThunk } from '@/store/productsSlice';
+import { Plus, Search, SlidersHorizontal, Package, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function ProductsPage() {
     const dispatch = useDispatch();
@@ -15,6 +16,8 @@ export default function ProductsPage() {
     useEffect(()=>{
         dispatch(getProductsThunk());
      }, [dispatch])
+
+    const [productToDelete, setProductToDelete]= useState(null);
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-screen bg-slate-50/30">
@@ -82,7 +85,11 @@ export default function ProductsPage() {
 
             {/* On boucle sur "items" qui vient du store Redux */}
             {!loading && items.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard 
+                  key={p.id} 
+                  product={p}
+                  onDeleteClick={() => setProductToDelete(p.id)}
+                 />
             ))}
 
             {/* Si ce n'est pas en train de charger et qu'il n'y a aucun produit */}
@@ -92,6 +99,54 @@ export default function ProductsPage() {
                 </div>
             )}
         </div>
+        {/* MODAL DE CONFIRMATION */}
+        {productToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+              <div className="text-center">
+                <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="w-8 h-8 text-red-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">Êtes-vous sûr ?</h2>
+                <p className="text-slate-500 mt-2">
+                  Cette action est irréversible. Le produit sera définitivement supprimé.
+                </p>
+              </div>
+
+              <div className="flex gap-3 mt-8">
+                <button 
+                  onClick={() => setProductToDelete(null)}
+                  className="flex-1 py-3 px-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={async () => {
+                    // 1. Créer le toast de chargement
+                    const deleteToast = toast.loading("Suppression en cours...");
+                    
+                    try {
+                      // 2. Lancer la suppression et attendre le résultat
+                      await dispatch(deleteProductThunk(productToDelete)).unwrap();
+                      
+                      // 3. Succès : On remplace le chargement par un succès
+                      toast.success("Produit supprimé !", { id: deleteToast });
+                      
+                      // Fermer la popup
+                      setProductToDelete(null);
+                    } catch (err) {
+                      // 4. Erreur : On remplace le chargement par une erreur
+                      toast.error("Échec de la suppression", { id: deleteToast });
+                    }
+                  }}
+                  className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all"
+                >
+                Supprimer
+              </button>
+              </div>
+            </div>
+          </div>
+        )}
 
     </div>
   );

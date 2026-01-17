@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { addProduct, getProducts } from "@/api/productService";
+import { addProduct, getProducts, deleteProduct } from "@/api/productService";
 
 export const addProductThunk = createAsyncThunk(
     'products/add',
@@ -14,6 +14,14 @@ export const getProductsThunk = createAsyncThunk(
     async()=>{
         const data = await  getProducts();
         return data;
+    }
+)
+
+export const deleteProductThunk = createAsyncThunk(
+    'products/delete',
+    async(id) => {
+        await deleteProduct(id);
+        return id;
     }
 )
 
@@ -40,7 +48,7 @@ const productSlice = createSlice({
         })
         //Get
          .addCase(getProductsThunk.pending,(state)=>{
-            state.loading=true;
+            state.loading = true;
          })
          .addCase(getProductsThunk.fulfilled,(state, action)=>{
             state.loading = false;
@@ -49,7 +57,19 @@ const productSlice = createSlice({
          .addCase(getProductsThunk.rejected, (state, action) => {
             state.loading = false;
             console.error("La récupération a échoué :", action.error.message);
-        });
+        })
+        //Delete
+         .addCase(deleteProductThunk.pending,(state)=>{
+            state.loading = true;
+         })
+         .addCase(deleteProductThunk.fulfilled,(state,action)=>{
+            state.loading = false;
+            state.items = state.items.filter((product)=> product.id !== action.payload);
+         })
+         .addCase(deleteProductThunk.rejected,(state, action)=>{
+            state.loading = false;
+            console.error("La suppression a échoué", action.error.message);
+         })
     },
 });
 export default productSlice.reducer;
