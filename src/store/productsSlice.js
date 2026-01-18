@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { addProduct, getProducts, deleteProduct } from "@/api/productService";
+import { addProduct, getProducts, deleteProduct, updateProduct } from "@/api/productService";
 
 export const addProductThunk = createAsyncThunk(
     'products/add',
@@ -15,7 +15,7 @@ export const getProductsThunk = createAsyncThunk(
         const data = await  getProducts();
         return data;
     }
-)
+);
 
 export const deleteProductThunk = createAsyncThunk(
     'products/delete',
@@ -23,7 +23,15 @@ export const deleteProductThunk = createAsyncThunk(
         await deleteProduct(id);
         return id;
     }
-)
+);
+
+export const updateProductThunk = createAsyncThunk(
+    'products/update',
+    async({id, productData})=>{
+        const data = await updateProduct(id, productData);
+        return data;
+    }
+);
 
 
 const productSlice = createSlice({
@@ -70,6 +78,21 @@ const productSlice = createSlice({
             state.loading = false;
             console.error("La suppression a échoué", action.error.message);
          })
+         //Update
+         .addCase(updateProductThunk.pending,(state)=>{
+            state.loading = true;
+         })
+        .addCase(updateProductThunk.fulfilled, (state, action) => {
+            state.loading = false;
+            const index = state.items.findIndex((p) => p.id === action.payload.id);
+            if (index !== -1) {
+                state.items[index] = action.payload;
+            }
+        })
+         .addCase(updateProductThunk.rejected, (state, action) => {
+            state.loading = false;
+            console.error("Erreur de mise à jour :", action.error.message);
+         });
     },
 });
 export default productSlice.reducer;

@@ -4,22 +4,67 @@ import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Link from 'next/link';
 import { ProductCard } from '@/components/ProductCard';
-import { getProductsThunk, deleteProductThunk } from '@/store/productsSlice';
-import { Plus, Search, SlidersHorizontal, Package, Trash2 } from 'lucide-react';
+import { getProductsThunk, deleteProductThunk, updateProductThunk } from '@/store/productsSlice';
+import { Plus, Search, SlidersHorizontal, Trash2, X, Edit, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ProductsPage() {
     const dispatch = useDispatch();
+    const { items, loading } = useSelector((state) => state.products);
 
-    const {items, loading} = useSelector((state)=>state.products);
+    // États locaux
+    const [productToDelete, setProductToDelete] = useState(null);
+    const [productToEdit, setProductToEdit] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null);
 
-    useEffect(()=>{
+    useEffect(() => {
         dispatch(getProductsThunk());
-     }, [dispatch])
+    }, [dispatch]);
 
-    const [productToDelete, setProductToDelete]= useState(null);
+    // Gérer l'aperçu de l'image
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const temporaryUrl = URL.createObjectURL(file);
+            setPreviewImage(temporaryUrl);
+        }
+    };
 
-  return (
+    // Soumission de la modification
+    const handleUpdateSubmit = async (e) => {
+        e.preventDefault();
+        const formDataRaw = new FormData(e.target);
+        const data = Object.fromEntries(formDataRaw.entries());
+
+        const imageInput = e.target.elements.image;
+        const imageFile = imageInput?.files?.[0] || null;
+
+        const loadToast = toast.loading("Mise à jour du produit...");
+
+        try {
+            const productData = {
+                ...data,
+                price: Number(data.price),
+                quantity: Number(data.quantity),
+                image: imageFile || productToEdit.image 
+            };
+
+            await dispatch(updateProductThunk({ 
+                id: productToEdit.id, 
+                productData 
+            })).unwrap();
+
+            toast.success("Produit mis à jour !", { id: loadToast });
+            
+            // On ferme et on nettoie tout
+            setProductToEdit(null);
+            setPreviewImage(null);
+        } catch (err) {
+            toast.error("Échec de la mise à jour", { id: loadToast });
+        }
+    };
+
+    return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-screen bg-slate-50/30">
       
       {/* 1. SECTION EN-TÊTE (Header) */}
@@ -79,26 +124,19 @@ export default function ProductsPage() {
 
       {/* 3. ZONE DE GRILLE (Emplacement des Cards) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            
-            {/* Si c'est en train de charger, on peut afficher un petit texte */}
-            {loading && <p className="text-teal-600 font-bold">Chargement des produits...</p>}
-
-            {/* On boucle sur "items" qui vient du store Redux */}
-            {!loading && items.map((p) => (
+            {loading && <p>Chargement...</p>}
+            {items.map((p) => (
                 <ProductCard 
-                  key={p.id} 
-                  product={p}
-                  onDeleteClick={() => setProductToDelete(p.id)}
-                 />
+                    key={p.id} 
+                    product={p}
+                    onDeleteClick={() => setProductToDelete(p.id)}
+                    onEditClick={() => {
+                        setProductToEdit(p);
+                        setPreviewImage(null); // Reset preview à l'ouverture
+                    }}
+                />
             ))}
-
-            {/* Si ce n'est pas en train de charger et qu'il n'y a aucun produit */}
-            {!loading && items.length === 0 && (
-                <div className="col-span-full text-center py-20">
-                    <p className="text-slate-400 text-lg font-medium">Votre inventaire est vide.</p>
-                </div>
-            )}
-        </div>
+        </div> 
         {/* MODAL DE CONFIRMATION */}
         {productToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -144,6 +182,120 @@ export default function ProductsPage() {
                 Supprimer
               </button>
               </div>
+            </div>
+          </div>
+        )}
+        {/* MODAL DE MODIFICATION */}
+        {productToEdit && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+            <div className="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl border border-slate-100 my-8 animate-in zoom-in duration-200">
+              
+              {/* Header Modal */}
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                  <Edit className="w-6 h-6 text-teal-600" /> Modifier le produit
+                </h2>
+                <button onClick={() => setProductToEdit(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                  <X className="w-6 h-6 text-slate-400" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateSubmit} className="space-y-5">
+                  {/* Nom du produit */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Nom du produit</label>
+                    <input 
+                      name="name"
+                      type="text"
+                      defaultValue={productToEdit.name}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                      required
+                    />
+                  </div>
+
+                  {/* Quantité et Prix */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Quantité</label>
+                      <input 
+                        name="quantity" 
+                        type="number" 
+                        defaultValue={productToEdit.quantity} 
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-teal-500/20" 
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Prix (€)</label>
+                      <input 
+                        name="price" 
+                        type="number" 
+                        defaultValue={productToEdit.price} 
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-teal-500/20" 
+                        required 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Catégorie */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Catégorie</label>
+                    <select 
+                      name="category" 
+                      defaultValue={productToEdit.category} 
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-teal-500/20"
+                    >
+                      <option>Électronique</option>
+                      <option>Informatique</option>
+                      <option>Accessoires</option>
+                    </select>
+                  </div>
+
+                  {/* ZONE IMAGE (Le fix pour ton erreur est ici) */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Image du produit</label>
+                    <div className="flex items-center gap-4 p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
+                        {/* Image actuelle */}
+                        <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white shadow-md flex-shrink-0">
+                            <img 
+                                src={previewImage || productToEdit.image}
+                                alt="Preview" 
+                                className="w-full h-full object-cover" 
+                            />
+                        </div>
+                        
+                        {/* Input pour la nouvelle image */}
+                        <label className="flex-1 flex flex-col items-center justify-center py-4 border-2 border-dashed border-slate-200 rounded-xl hover:border-teal-400 hover:bg-white cursor-pointer transition-all group">
+                            <input 
+                                name="image" 
+                                type="file" 
+                                className="hidden" 
+                                accept="image/*" 
+                                onChange={handleImageChange}
+                            />
+                            <Upload className="w-5 h-5 text-teal-600 mb-1 group-hover:scale-110 transition-transform" />
+                            <span className="text-xs text-slate-500 font-medium">Changer la photo</span>
+                        </label>
+                    </div>
+                  </div>
+
+                  {/* Boutons d'action */}
+                  <div className="pt-4 flex flex-col md:flex-row gap-3">
+                    <button 
+                      type="button"
+                      onClick={() => setProductToEdit(null)}
+                      className="flex-1 py-3 px-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                    <button 
+                      type="submit"
+                      className="flex-1 py-3 px-4 bg-teal-600 text-white rounded-xl font-bold shadow-lg shadow-teal-600/20 hover:bg-teal-700 transition-all"
+                    >
+                      Enregistrer les modifications
+                    </button>
+                  </div>
+              </form>
             </div>
           </div>
         )}

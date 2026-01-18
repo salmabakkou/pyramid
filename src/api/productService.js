@@ -37,4 +37,30 @@ export const getProducts = async() =>{
 export const deleteProduct = async(id) =>{
     const response = await api.delete(`/products/${id}`);
     return response.data;
-}
+};
+
+export const updateProduct = async (id, formData) => {
+    let imageUrl = formData.image; // Par défaut, on garde l'image actuelle (l'URL)
+
+    // Si l'image est un nouveau fichier, on l'envoie sur Cloudinary
+    if (formData.image instanceof File) {
+        const imageData = new FormData();
+        imageData.append("file", formData.image);
+        imageData.append("upload_preset", UPLOAD_PRESET);
+
+        const cloudinaryRes = await axios.post(CLOUDINARY_URL, imageData);
+        imageUrl = cloudinaryRes.data.secure_url;
+    }
+
+    // Préparation de l'objet mis à jour pour MockAPI
+    const updatedProduct = {
+        name: formData.name,
+        price: Number(formData.price),
+        category: formData.category,
+        quantity: Number(formData.quantity),
+        image: imageUrl, // Soit la nouvelle URL, soit l'ancienne
+    };
+
+    const res = await api.put(`/products/${id}`, updatedProduct);
+    return res.data;
+};

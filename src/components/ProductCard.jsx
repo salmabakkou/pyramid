@@ -2,7 +2,7 @@
 
 import { Trash2, Edit, Layers, Package, Eye } from 'lucide-react';
 
-export const ProductCard = ({ product, onDeleteClick }) => {
+export const ProductCard = ({ product, onDeleteClick, onEditClick }) => {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full">
       
@@ -51,7 +51,7 @@ export const ProductCard = ({ product, onDeleteClick }) => {
           </button>
           
           {/* Bouton Modifier */}
-          <button className="flex items-center justify-center py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs hover:bg-teal-50 hover:text-teal-600 transition-all active:scale-95 border border-slate-200/50">
+          <button onClick={onEditClick} className="flex items-center justify-center py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs hover:bg-teal-50 hover:text-teal-600 transition-all active:scale-95 border border-slate-200/50">
             <Edit className="w-4 h-4" />
           </button>
 
