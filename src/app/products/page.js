@@ -17,6 +17,24 @@ export default function ProductsPage() {
     const [productToEdit, setProductToEdit] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
 
+    // États de filtrage
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("Toutes catégories");
+    const [sortBy, setSortBy] = useState("Plus récent");
+
+    const filtredItems = items
+     .filter((product)=>{
+       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+       const matchesCategories = selectedCategory === "Toutes catégories" || product.category === selectedCategory ;
+       return matchesSearch && matchesCategories ;
+     })
+     .sort((a, b)=>{
+      if(sortBy === "Prix croissant") return a.price - b.price ;
+      if(sortBy === "Prix décroissant") return b.price - a.price ;
+      if(sortBy === "Stock") return b.quantity - a.quantity ;
+      return b.id - a.id
+     })
+
     useEffect(() => {
         dispatch(getProductsThunk());
     }, [dispatch]);
@@ -94,6 +112,8 @@ export default function ProductsPage() {
           <input 
             type="text"
             placeholder="Rechercher un produit..."
+            value={searchTerm}
+            onChange={(e)=>setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none transition-all placeholder:text-slate-400"
           />
         </div>
@@ -101,7 +121,10 @@ export default function ProductsPage() {
         {/* Filtres Select */}
         <div className="flex gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-48">
-            <select className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none appearance-none cursor-pointer text-slate-700 font-medium">
+            <select 
+              value={selectedCategory}
+              onChange={(e)=>setSelectedCategory(e.target.value)}
+              className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none appearance-none cursor-pointer text-slate-700 font-medium">
               <option>Toutes catégories</option>
               <option>Électronique</option>
               <option>Informatique</option>
@@ -112,7 +135,10 @@ export default function ProductsPage() {
             <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
               <SlidersHorizontal className="w-4 h-4 text-slate-500" />
             </div>
-            <select className="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none appearance-none cursor-pointer text-slate-700 font-medium">
+            <select
+              value={sortBy}
+              onChange={(e)=>setSortBy(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none appearance-none cursor-pointer text-slate-700 font-medium">
               <option>Plus récent</option>
               <option>Prix croissant</option>
               <option>Prix décroissant</option>
@@ -125,7 +151,7 @@ export default function ProductsPage() {
       {/* 3. ZONE DE GRILLE (Emplacement des Cards) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {loading && <p>Chargement...</p>}
-            {items.map((p) => (
+            {filtredItems.map((p) => (
                 <ProductCard 
                     key={p.id} 
                     product={p}
