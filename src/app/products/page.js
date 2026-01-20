@@ -39,6 +39,18 @@ export default function ProductsPage() {
         dispatch(getProductsThunk());
     }, [dispatch]);
 
+    // Gérer la suppression
+    const handleDelete = async () => {
+        const deleteToast = toast.loading("Suppression en cours...");
+        try {
+            await dispatch(deleteProductThunk(productToDelete)).unwrap();
+            toast.success("Produit supprimé !", { id: deleteToast });
+            setProductToDelete(null);
+        } catch (err) {
+            toast.error("Échec de la suppression", { id: deleteToast });
+        }
+    };
+
     // Gérer l'aperçu de l'image
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -74,7 +86,6 @@ export default function ProductsPage() {
 
             toast.success("Produit mis à jour !", { id: loadToast });
             
-            // On ferme et on nettoie tout
             setProductToEdit(null);
             setPreviewImage(null);
         } catch (err) {
@@ -85,7 +96,6 @@ export default function ProductsPage() {
     return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-screen bg-slate-50/30">
       
-      {/* 1. SECTION EN-TÊTE (Header) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Produits</h1>
@@ -103,10 +113,8 @@ export default function ProductsPage() {
         </Link>
       </div>
 
-      {/* 2. SECTION BARRE DE FILTRES (Search & Selects) */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center">
         
-        {/* Barre de recherche */}
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input 
@@ -118,7 +126,6 @@ export default function ProductsPage() {
           />
         </div>
         
-        {/* Filtres Select */}
         <div className="flex gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-48">
             <select 
@@ -148,7 +155,6 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* 3. ZONE DE GRILLE (Emplacement des Cards) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {loading && <p>Chargement...</p>}
             {filtredItems.map((p) => (
@@ -158,12 +164,12 @@ export default function ProductsPage() {
                     onDeleteClick={() => setProductToDelete(p.id)}
                     onEditClick={() => {
                         setProductToEdit(p);
-                        setPreviewImage(null); // Reset preview à l'ouverture
+                        setPreviewImage(null);
                     }}
                 />
             ))}
         </div> 
-        {/* MODAL DE CONFIRMATION */}
+
         {productToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
@@ -185,24 +191,7 @@ export default function ProductsPage() {
                   Annuler
                 </button>
                 <button 
-                  onClick={async () => {
-                    // 1. Créer le toast de chargement
-                    const deleteToast = toast.loading("Suppression en cours...");
-                    
-                    try {
-                      // 2. Lancer la suppression et attendre le résultat
-                      await dispatch(deleteProductThunk(productToDelete)).unwrap();
-                      
-                      // 3. Succès : On remplace le chargement par un succès
-                      toast.success("Produit supprimé !", { id: deleteToast });
-                      
-                      // Fermer la popup
-                      setProductToDelete(null);
-                    } catch (err) {
-                      // 4. Erreur : On remplace le chargement par une erreur
-                      toast.error("Échec de la suppression", { id: deleteToast });
-                    }
-                  }}
+                  onClick={handleDelete}
                   className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all"
                 >
                 Supprimer
@@ -211,12 +200,11 @@ export default function ProductsPage() {
             </div>
           </div>
         )}
-        {/* MODAL DE MODIFICATION */}
+
         {productToEdit && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
             <div className="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl border border-slate-100 my-8 animate-in zoom-in duration-200">
               
-              {/* Header Modal */}
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                   <Edit className="w-6 h-6 text-teal-600" /> Modifier le produit
@@ -227,7 +215,6 @@ export default function ProductsPage() {
               </div>
 
               <form onSubmit={handleUpdateSubmit} className="space-y-5">
-                  {/* Nom du produit */}
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">Nom du produit</label>
                     <input 
@@ -239,7 +226,6 @@ export default function ProductsPage() {
                     />
                   </div>
 
-                  {/* Quantité et Prix */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">Quantité</label>
@@ -263,7 +249,6 @@ export default function ProductsPage() {
                     </div>
                   </div>
 
-                  {/* Catégorie */}
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">Catégorie</label>
                     <select 
@@ -277,11 +262,9 @@ export default function ProductsPage() {
                     </select>
                   </div>
 
-                  {/* ZONE IMAGE (Le fix pour ton erreur est ici) */}
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">Image du produit</label>
                     <div className="flex items-center gap-4 p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
-                        {/* Image actuelle */}
                         <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white shadow-md flex-shrink-0">
                             <img 
                                 src={previewImage || productToEdit.image}
@@ -290,7 +273,6 @@ export default function ProductsPage() {
                             />
                         </div>
                         
-                        {/* Input pour la nouvelle image */}
                         <label className="flex-1 flex flex-col items-center justify-center py-4 border-2 border-dashed border-slate-200 rounded-xl hover:border-teal-400 hover:bg-white cursor-pointer transition-all group">
                             <input 
                                 name="image" 
@@ -305,7 +287,6 @@ export default function ProductsPage() {
                     </div>
                   </div>
 
-                  {/* Boutons d'action */}
                   <div className="pt-4 flex flex-col md:flex-row gap-3">
                     <button 
                       type="button"
