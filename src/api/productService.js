@@ -59,6 +59,10 @@ export const updateProduct = async (id, formData) => {
         category: formData.category,
         quantity: Number(formData.quantity),
         image: imageUrl, // Soit la nouvelle URL, soit l'ancienne
+        status: formData.status,
+        saleDate: formData.status === "Vendu" 
+            ? (formData.saleDate || new Date().toISOString()) 
+            : null
     };
 
     const res = await api.put(`/products/${id}`, updatedProduct);

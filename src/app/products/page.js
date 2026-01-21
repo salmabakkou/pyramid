@@ -155,20 +155,24 @@ export default function ProductsPage() {
         </div>
       </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {loading && <p>Chargement...</p>}
-            {filtredItems.map((p) => (
-                <ProductCard 
-                    key={p.id} 
-                    product={p}
-                    onDeleteClick={() => setProductToDelete(p.id)}
-                    onEditClick={() => {
-                        setProductToEdit(p);
-                        setPreviewImage(null);
-                    }}
-                />
-            ))}
-        </div> 
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {loading && <p>Chargement...</p>}
+          {filtredItems.map((p) => (
+              <div 
+                key={p.id} 
+                className={p.status === 'Vendu' ? 'opacity-50 grayscale-[0.8] transition-all' : 'transition-all'}
+              >
+                  <ProductCard 
+                      product={p}
+                      onDeleteClick={() => setProductToDelete(p.id)}
+                      onEditClick={() => {
+                          setProductToEdit(p);
+                          setPreviewImage(null);
+                      }}
+                  />
+              </div>
+          ))}
+      </div>
 
         {productToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -260,6 +264,34 @@ export default function ProductsPage() {
                       <option>Informatique</option>
                       <option>Accessoires</option>
                     </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Statut</label>
+                      <select 
+                        name="status" 
+                        defaultValue={productToEdit.status || "En Stock"} 
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-teal-500/20"
+                      >
+                        <option value="En Stock">En Stock</option>
+                        <option value="Vendu">Vendu</option>
+                      </select>
+                    </div>
+    
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Date de vente (si vendu)</label>
+                      <input 
+                        name="saleDate" 
+                        type="date"
+                        defaultValue={
+                          productToEdit.saleDate && typeof productToEdit.saleDate === 'string'
+                            ? productToEdit.saleDate.split('T')[0] 
+                            : ""
+                        }
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-teal-500/20"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">

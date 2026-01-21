@@ -173,14 +173,14 @@ export default function AddProductPage() {
                         <button 
                             type="button" 
                             onClick={resetForm}
-                            className="flex-1 py-3 px-4 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50"
+                            className="flex-1 cursor-pointer py-3 px-4 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50"
                         >
                             Annuler
                         </button>
                         <button 
                             type="submit" 
                             disabled={isLoading}  
-                            className="flex-1 py-3 px-4 rounded-xl bg-teal-600 font-semibold text-white hover:bg-teal-700 shadow-lg disabled:opacity-50 transition-all"
+                            className="flex-1 cursor-pointer py-3 px-4 rounded-xl bg-teal-600 font-semibold text-white hover:bg-teal-700 shadow-lg disabled:opacity-50 transition-all"
                         >
                             {isLoading ? "Envoi en cours..." : "Enregistrer le produit"}
                         </button>
