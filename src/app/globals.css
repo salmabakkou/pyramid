@@ -1,1 +1,13 @@
 @import "tailwindcss";
+:root {
+  /* En passant de 16px à 12px, tu obtiens exactement un ratio de 75% */
+  font-size: 12px; 
+}
+
+body {
+  @apply bg-slate-50 text-slate-900;
+  /* On s'assure que les icônes lucide suivent le mouvement */
+  svg {
+    transform: scale(0.9);
+  }
+}
