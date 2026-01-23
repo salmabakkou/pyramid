@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 export default function ProductsPage() {
     const dispatch = useDispatch();
     const { items, loading } = useSelector((state) => state.products);
+    
 
     // États locaux
     const [productToDelete, setProductToDelete] = useState(null);

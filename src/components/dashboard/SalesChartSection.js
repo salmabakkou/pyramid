@@ -18,26 +18,33 @@ export const SalesChartSection = ({ sales = [] }) => {
   }, [sales]);
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const fetchAi = async () => {
-      // On ne lance l'IA que si on a des ventes et pas encore d'analyse
-      if (sales.length > 0 && !aiAnalysis && !isLoadingAi) {
-        setIsLoadingAi(true);
+  let isMounted = true;
+  
+  const fetchAi = async () => {
+    // 1. On vérifie qu'on a des données ET qu'on n'est pas déjà en train de charger
+    // On retire !aiAnalysis d'ici pour le gérer plus bas
+    if (sales.length > 0 && chartData.length > 0 && !isLoadingAi && !aiAnalysis) {
+      setIsLoadingAi(true);
+      
+      try {
         const total = chartData.reduce((sum, item) => sum + item.total, 0);
-        
         const result = await getSalesAnalysis(chartData, total, sales.length);
         
         if (isMounted) {
           setAiAnalysis(result);
-          setIsLoadingAi(false);
         }
+      } catch (error) {
+        console.error("Erreur lors de l'appel IA:", error);
+      } finally {
+        if (isMounted) setIsLoadingAi(false);
       }
-    };
+    }
+  };
 
-    fetchAi();
-    return () => { isMounted = false; };
-  }, [sales, chartData, aiAnalysis]);
+  fetchAi();
+  return () => { isMounted = false; };
+  // 2. On NE met PAS aiAnalysis dans les dépendances
+}, [sales.length, chartData.length]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
